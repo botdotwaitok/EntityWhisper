@@ -1,0 +1,41 @@
+/* ============================================================
+   Entity Whisper TTS — Settings Panel Styles
+   Uses SillyTavern Smart Theme CSS variables for consistency.
+   ============================================================ */
+
+.ew-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.ew-settings__header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 4px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--SmartThemeBorderColor, #555);
+}
+
+.ew-settings__title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--SmartThemeBodyColor, #ccc);
+}
+
+.ew-settings__subtitle {
+    font-size: 12px;
+    color: var(--SmartThemeQuoteColor, #888);
+}
+
+.ew-settings label {
+    font-size: 14px;
+    color: var(--SmartThemeBodyColor, #ccc);
+}
+
+.ew-settings input.text_pole,
+.ew-settings select.text_pole {
+    font-size: 14px;
+}

@@ -1,0 +1,11 @@
+{
+    "display_name": "Entity Whisper TTS",
+    "loading_order": 200,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "ui/settings.css",
+    "author": "robot",
+    "version": "1.0.0",
+    "homePage": ""
+}
