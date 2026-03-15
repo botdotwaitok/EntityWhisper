@@ -39,3 +39,80 @@
 .ew-settings select.text_pole {
     font-size: 14px;
 }
+
+/* --- Divider --- */
+.ew-settings__divider {
+    height: 1px;
+    background: var(--SmartThemeBorderColor, #555);
+    margin: 6px 0;
+}
+
+/* --- Row layout (dropdown + button) --- */
+.ew-settings__row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.ew-settings__row select.text_pole {
+    flex: 1;
+}
+
+.ew-settings__row .menu_button_icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+/* --- Hint text --- */
+.ew-settings__hint {
+    font-size: 11px;
+    color: var(--SmartThemeQuoteColor, #888);
+    margin-top: -4px;
+}
+
+/* --- Emotions grid (pill/chip display) --- */
+.ew-emotions-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 8px;
+    border-radius: 8px;
+    background: var(--SmartThemeBlurTintColor, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--SmartThemeBorderColor, #555);
+    min-height: 32px;
+}
+
+.ew-emotion-chip {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--SmartThemeQuoteColor, #444);
+    color: var(--SmartThemeBodyColor, #ccc);
+    opacity: 0.85;
+    transition: opacity 0.15s ease;
+}
+
+.ew-emotion-chip:hover {
+    opacity: 1;
+}
+
+.ew-emotion-chip--default {
+    background: var(--SmartThemeFavColor, #60a5fa);
+    color: #fff;
+    opacity: 1;
+}
+
+.ew-emotion-chip--empty {
+    background: transparent;
+    color: var(--SmartThemeQuoteColor, #888);
+    font-style: italic;
+    font-weight: 400;
+    opacity: 0.7;
+}

@@ -6,6 +6,5 @@
     "js": "index.js",
     "css": "ui/settings.css",
     "author": "robot",
-    "version": "1.0.0",
-    "homePage": ""
+    "version": "1.0.0"
 }
