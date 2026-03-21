@@ -1,0 +1,130 @@
+/* ============================================================
+   Entity Whisper — Inline TTS Playback Styles
+   Applied directly to text paragraphs containing <say> tags.
+   Accent color uses --SmartThemeQuoteColor (Quote Text) for
+   easy per-theme customization in SillyTavern.
+   ============================================================ */
+
+/* --- Spinner animation --- */
+@keyframes ew-spin-anim {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.ew-spin {
+    animation: ew-spin-anim 0.8s linear infinite;
+    display: inline-block;
+}
+
+/* --- Audio line: applied directly to the text paragraph --- */
+.ew-audio-line {
+    --ew-progress: 0%;
+    position: relative;
+    overflow: hidden;
+}
+
+
+
+/* --- Progress bar (behind content) --- */
+.ew-audio-line__progress {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--ew-progress);
+    background: var(--SmartThemeQuoteColor, #888);
+    opacity: 0.1;
+    border-radius: 10px 0 0 10px;
+    transition: width 0.15s linear;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* --- Inline controls (appended at end of text) --- */
+.ew-audio-line__controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+    position: relative;
+    z-index: 1;
+}
+
+.ew-audio-line__duration {
+    font-size: 11px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--SmartThemeQuoteColor, #888);
+    min-width: 2.5em;
+    text-align: right;
+}
+
+/* --- Buttons --- */
+.ew-audio-line__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--SmartThemeBodyColor, #ccc);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.ew-audio-line__btn:hover {
+    background: var(--SmartThemeQuoteColor, #888);
+    color: #fff;
+    transform: scale(1.05);
+}
+
+.ew-audio-line__btn:active {
+    transform: scale(0.95);
+}
+
+/* Play button states */
+.ew-audio-line__btn.ew--loading {
+    cursor: wait;
+    opacity: 0.6;
+}
+
+.ew-audio-line__btn.ew--ready {
+    color: var(--SmartThemeQuoteColor, #888);
+}
+
+.ew-audio-line__btn.ew--playing {
+    color: var(--SmartThemeQuoteColor, #888);
+    background: color-mix(in srgb, var(--SmartThemeQuoteColor, #888) 12%, transparent);
+}
+
+.ew-audio-line__btn.ew--error {
+    color: #f87171;
+    cursor: not-allowed;
+}
+
+/* Regen button */
+.ew-audio-line__btn--regen {
+    opacity: 0.5;
+    font-size: 11px;
+}
+
+.ew-audio-line__btn--regen:hover {
+    opacity: 1;
+}
+
+/* --- Mobile responsive --- */
+@media (max-width: 600px) {
+    .ew-audio-line {
+        padding: 5px 8px;
+    }
+
+    .ew-audio-line__btn {
+        width: 22px;
+        height: 22px;
+        font-size: 12px;
+    }
+}

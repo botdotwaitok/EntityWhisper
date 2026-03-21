@@ -26,6 +26,21 @@ class EntityWhisperProvider {
     separator = '. ';
     audioElement = document.createElement('audio');
 
+    /**
+     * When the page runs in a Secure Context (HTTPS, e.g. Tailscale),
+     * rewrite plain HTTP URLs to go through SillyTavern's built-in
+     * CORS proxy at /proxy/<url> to avoid Mixed Content blocking.
+     *
+     * @param {string} url - The original HTTP URL
+     * @returns {string} Possibly rewritten URL
+     */
+    _resolveUrl(url) {
+        if (window.isSecureContext && url.startsWith('http://')) {
+            return `/proxy/${url}`;
+        }
+        return url;
+    }
+
     /** @type {string|null} Current emotion extracted by processText */
     _currentTone = null;
 
@@ -101,7 +116,13 @@ class EntityWhisperProvider {
     defaultSettings = {
         provider_endpoint: 'http://localhost:9881',
         text_lang: 'zh',
+        text_split_method: 'cut5',
         fallback_emotion: 'default',
+        speed: 1.0,
+        top_k: 15,
+        top_p: 1.0,
+        temperature: 1.0,
+        repetition_penalty: 1.35,
     };
 
     //################//
@@ -131,6 +152,33 @@ class EntityWhisperProvider {
                 <option value="ko" ${currentSettings.text_lang === 'ko' ? 'selected' : ''}>한국어 (Korean)</option>
             </select>
 
+            <label for="ew_text_split_method">切句方式 (Text Split):</label>
+            <select id="ew_text_split_method" class="text_pole">
+                <option value="cut0" ${currentSettings.text_split_method === 'cut0' ? 'selected' : ''}>不切 (No split)</option>
+                <option value="cut1" ${currentSettings.text_split_method === 'cut1' ? 'selected' : ''}>凑四句一切 (Every 4 sentences)</option>
+                <option value="cut2" ${currentSettings.text_split_method === 'cut2' ? 'selected' : ''}>凑50字一切 (Every 50 chars)</option>
+                <option value="cut3" ${currentSettings.text_split_method === 'cut3' ? 'selected' : ''}>按中文句号。切 (Chinese period)</option>
+                <option value="cut4" ${currentSettings.text_split_method === 'cut4' ? 'selected' : ''}>按英文句号.切 (English period)</option>
+                <option value="cut5" ${currentSettings.text_split_method === 'cut5' ? 'selected' : ''}>按标点符号切 (All punctuation)</option>
+            </select>
+
+            <div class="ew-settings__divider"></div>
+
+            <label>语速 (Speed): <span id="ew_speed_value">${currentSettings.speed}</span></label>
+            <input id="ew_speed" type="range" class="ew-range" min="0.25" max="2.0" step="0.05" value="${currentSettings.speed}" />
+
+            <label>Top K: <span id="ew_top_k_value">${currentSettings.top_k}</span></label>
+            <input id="ew_top_k" type="range" class="ew-range" min="1" max="50" step="1" value="${currentSettings.top_k}" />
+
+            <label>Top P: <span id="ew_top_p_value">${currentSettings.top_p}</span></label>
+            <input id="ew_top_p" type="range" class="ew-range" min="0.0" max="1.0" step="0.05" value="${currentSettings.top_p}" />
+
+            <label>Temperature: <span id="ew_temperature_value">${currentSettings.temperature}</span></label>
+            <input id="ew_temperature" type="range" class="ew-range" min="0.01" max="2.0" step="0.05" value="${currentSettings.temperature}" />
+
+            <label>Repetition Penalty: <span id="ew_repetition_penalty_value">${currentSettings.repetition_penalty}</span></label>
+            <input id="ew_repetition_penalty" type="range" class="ew-range" min="1.0" max="2.0" step="0.05" value="${currentSettings.repetition_penalty}" />
+
             <div class="ew-settings__divider"></div>
 
             <label for="ew_fallback_emotion">Fallback Emotion:</label>
@@ -157,7 +205,20 @@ class EntityWhisperProvider {
     onSettingsChange() {
         this.settings.provider_endpoint = $('#ew_provider_endpoint').val();
         this.settings.text_lang = $('#ew_text_lang').val();
+        this.settings.text_split_method = $('#ew_text_split_method').val();
         this.settings.fallback_emotion = $('#ew_fallback_emotion').val();
+        this.settings.speed = parseFloat($('#ew_speed').val());
+        this.settings.top_k = parseInt($('#ew_top_k').val(), 10);
+        this.settings.top_p = parseFloat($('#ew_top_p').val());
+        this.settings.temperature = parseFloat($('#ew_temperature').val());
+        this.settings.repetition_penalty = parseFloat($('#ew_repetition_penalty').val());
+
+        // Live readout
+        $('#ew_speed_value').text(Number(this.settings.speed).toFixed(2));
+        $('#ew_top_k_value').text(String(this.settings.top_k));
+        $('#ew_top_p_value').text(Number(this.settings.top_p).toFixed(2));
+        $('#ew_temperature_value').text(Number(this.settings.temperature).toFixed(2));
+        $('#ew_repetition_penalty_value').text(Number(this.settings.repetition_penalty).toFixed(2));
 
         saveTtsProviderSettings();
     }
@@ -183,6 +244,23 @@ class EntityWhisperProvider {
         $('#ew_text_lang')
             .val(this.settings.text_lang)
             .on('change', () => this.onSettingsChange());
+
+        $('#ew_text_split_method')
+            .val(this.settings.text_split_method)
+            .on('change', () => this.onSettingsChange());
+
+        // Inference parameter sliders
+        for (const id of ['ew_speed', 'ew_top_k', 'ew_top_p', 'ew_temperature', 'ew_repetition_penalty']) {
+            const key = id.replace('ew_', '');
+            $(`#${id}`).val(this.settings[key]).on('input', () => this.onSettingsChange());
+        }
+
+        // Sync readout spans with saved values (settingsHtml only bakes in defaults)
+        $('#ew_speed_value').text(Number(this.settings.speed).toFixed(2));
+        $('#ew_top_k_value').text(String(this.settings.top_k));
+        $('#ew_top_p_value').text(Number(this.settings.top_p).toFixed(2));
+        $('#ew_temperature_value').text(Number(this.settings.temperature).toFixed(2));
+        $('#ew_repetition_penalty_value').text(Number(this.settings.repetition_penalty).toFixed(2));
 
         $('#ew_fallback_emotion')
             .val(this.settings.fallback_emotion)
@@ -237,7 +315,9 @@ class EntityWhisperProvider {
      */
     async fetchTtsVoiceObjects() {
         try {
-            const response = await fetch(`${this.settings.provider_endpoint}/speakers`);
+            const url = this._resolveUrl(`${this.settings.provider_endpoint}/speakers`);
+            console.info(`[Entity Whisper] Fetching speakers from: ${url}`);
+            const response = await fetch(url);
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${await response.text()}`);
@@ -247,7 +327,7 @@ class EntityWhisperProvider {
             this.voices = data;
             return data;
         } catch (error) {
-            console.warn('[Entity Whisper] Failed to fetch speakers:', error);
+            console.warn('[Entity Whisper] Failed to fetch speakers:', error?.message || error);
             return [];
         }
     }
@@ -263,18 +343,32 @@ class EntityWhisperProvider {
     async fetchEmotions(character) {
         if (!character) return [];
         try {
-            const response = await fetch(
-                `${this.settings.provider_endpoint}/character_emotions?character=${encodeURIComponent(character)}`,
+            // Try path-based endpoint first so it works through ST's /proxy/
+            // relay (the proxy strips query params, so we use a path segment).
+            const url = this._resolveUrl(
+                `${this.settings.provider_endpoint}/character_emotions/${encodeURIComponent(character)}`,
             );
+            console.info(`[Entity Whisper] Fetching emotions from: ${url}`);
+            const response = await fetch(url);
             if (!response.ok) {
-                console.warn(`[Entity Whisper] Failed to fetch emotions: HTTP ${response.status}`);
-                return [];
+                // Path-based endpoint might not be supported; try query-param
+                // version directly (won't work on HTTPS but acceptable degradation).
+                console.info('[Entity Whisper] Path-based emotions endpoint not available, trying query-param fallback...');
+                const fallbackUrl = `${this.settings.provider_endpoint}/character_emotions?character=${encodeURIComponent(character)}`;
+                const fallbackResponse = await fetch(fallbackUrl);
+                if (!fallbackResponse.ok) {
+                    console.warn(`[Entity Whisper] Failed to fetch emotions: HTTP ${fallbackResponse.status}`);
+                    return [];
+                }
+                const emotions = await fallbackResponse.json();
+                this._availableEmotions = emotions;
+                return emotions;
             }
             const emotions = await response.json();
             this._availableEmotions = emotions;
             return emotions;
         } catch (error) {
-            console.warn('[Entity Whisper] Failed to fetch emotions:', error);
+            console.warn('[Entity Whisper] Failed to fetch emotions:', error?.message || error);
             return [];
         }
     }
@@ -341,14 +435,19 @@ class EntityWhisperProvider {
             target_voice: targetVoice,
             use_st_adapter: true,
             text_lang: this.settings.text_lang,
-            text_split_method: 'cut5',
+            text_split_method: this.settings.text_split_method || 'cut5',
             batch_size: 1,
             media_type: 'wav',
             streaming_mode: false,
+            speed_factor: this.settings.speed ?? 1.0,
+            top_k: this.settings.top_k ?? 15,
+            top_p: this.settings.top_p ?? 1.0,
+            temperature: this.settings.temperature ?? 1.0,
+            repetition_penalty: this.settings.repetition_penalty ?? 1.35,
         };
 
         const response = await fetch(
-            `${this.settings.provider_endpoint}/`,
+            this._resolveUrl(`${this.settings.provider_endpoint}/`),
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -361,7 +460,29 @@ class EntityWhisperProvider {
             throw new Error(`HTTP ${response.status}: ${await response.text()}`);
         }
 
-        return response;
+        // ST's /proxy/ CORS relay does not forward Content-Type headers.
+        // On mobile (HTTPS / secure context) requests go through /proxy/,
+        // causing the audio blob to have an empty MIME type. ST's addAudioJob
+        // then rejects it ("Expecting audio/*, got"). Fix: reconstruct the
+        // Response with an explicit audio content type so the blob check passes.
+        const mediaType = params.media_type || 'wav';
+        const audioBuffer = await response.arrayBuffer();
+
+        // Broadcast audio for other plugins (e.g. Singularity) to capture.
+        // We dispatch on `document` so any listener can pick it up.
+        try {
+            const audioBlob = new Blob([audioBuffer], { type: `audio/${mediaType}` });
+            document.dispatchEvent(new CustomEvent('entity-whisper-audio', {
+                detail: { blob: audioBlob, text: inputText },
+            }));
+        } catch (e) {
+            console.warn('[Entity Whisper] Failed to dispatch audio event:', e);
+        }
+
+        return new Response(audioBuffer, {
+            status: 200,
+            headers: { 'Content-Type': `audio/${mediaType}` },
+        });
     }
 
     /**
