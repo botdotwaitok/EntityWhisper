@@ -337,6 +337,25 @@ function playAudioBlob(blobUrl, playBtnId) {
         }
         currentAudio = null;
         currentPlayingBtnId = null;
+
+        // Auto-advance: play next line in the same message if mode is 'all'
+        const settings = _getProviderSettings?.();
+        if (settings?.inline_playback_mode === 'all' && btn) {
+            const mesBlock = btn.closest('div.mes');
+            if (mesBlock) {
+                const allPlayBtns = Array.from(
+                    mesBlock.querySelectorAll('.ew-audio-line__btn:not(.ew-audio-line__btn--regen)'),
+                );
+                const idx = allPlayBtns.indexOf(btn);
+                const nextBtn = allPlayBtns[idx + 1];
+                if (nextBtn && nextBtn.classList.contains('ew--ready') && nextBtn.dataset.cacheKey) {
+                    const nextKey = nextBtn.dataset.cacheKey;
+                    if (audioCache.has(nextKey)) {
+                        playAudioBlob(audioCache.get(nextKey).url, nextBtn.id);
+                    }
+                }
+            }
+        }
     };
 
     audio.onerror = () => {

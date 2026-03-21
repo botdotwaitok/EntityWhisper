@@ -7,7 +7,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    font-size: 16px;
+    font-size: 20px;
 }
 
 .ew-settings__header {
@@ -20,24 +20,24 @@
 }
 
 .ew-settings__title {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 600;
     color: var(--SmartThemeBodyColor, #ccc);
 }
 
 .ew-settings__subtitle {
-    font-size: 14px;
+    font-size: 16px;
     color: var(--SmartThemeQuoteColor, #888);
 }
 
 .ew-settings label {
-    font-size: 16px;
+    font-size: 18px;
     color: var(--SmartThemeBodyColor, #ccc);
 }
 
 .ew-settings input.text_pole,
 .ew-settings select.text_pole {
-    font-size: 16px;
+    font-size: 18px;
 }
 
 /* --- Divider --- */
@@ -70,7 +70,7 @@
 
 /* --- Hint text --- */
 .ew-settings__hint {
-    font-size: 14px;
+    font-size: 16px;
     color: var(--SmartThemeQuoteColor, #888);
     margin-top: -4px;
 }
@@ -91,7 +91,7 @@
     display: inline-block;
     padding: 3px 10px;
     border-radius: 12px;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     background: var(--SmartThemeQuoteColor, #444);
     color: var(--SmartThemeBodyColor, #ccc);
@@ -129,7 +129,7 @@
     min-width: 2.5em;
     text-align: center;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 16px;
     padding: 1px 5px;
     border-radius: 6px;
     background: var(--SmartThemeBlurTintColor, rgba(255, 255, 255, 0.06));

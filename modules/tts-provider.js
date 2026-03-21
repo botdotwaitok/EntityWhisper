@@ -118,6 +118,7 @@ class EntityWhisperProvider {
         text_lang: 'zh',
         text_split_method: 'cut5',
         fallback_emotion: 'default',
+        inline_playback_mode: 'single',
         speed: 1.0,
         top_k: 15,
         top_p: 1.0,
@@ -136,35 +137,35 @@ class EntityWhisperProvider {
         <div class="ew-settings">
             <div class="ew-settings__header">
                 <span class="ew-settings__title">Entity Whisper</span>
-                <span class="ew-settings__subtitle">GPT-SoVITS TTS Provider</span>
+                <span class="ew-settings__subtitle">GPT-SoVITS 语音合成</span>
             </div>
 
-            <label for="ew_provider_endpoint">Provider Endpoint:</label>
+            <label for="ew_provider_endpoint">服务地址：</label>
             <input id="ew_provider_endpoint" type="text" class="text_pole"
                    maxlength="250" value="${currentSettings.provider_endpoint}"
                    placeholder="http://localhost:9881" />
 
-            <label for="ew_text_lang">Text Language:</label>
+            <label for="ew_text_lang">文本语言：</label>
             <select id="ew_text_lang" class="text_pole">
-                <option value="zh" ${currentSettings.text_lang === 'zh' ? 'selected' : ''}>中文 (Chinese)</option>
-                <option value="en" ${currentSettings.text_lang === 'en' ? 'selected' : ''}>English</option>
-                <option value="ja" ${currentSettings.text_lang === 'ja' ? 'selected' : ''}>日本語 (Japanese)</option>
-                <option value="ko" ${currentSettings.text_lang === 'ko' ? 'selected' : ''}>한국어 (Korean)</option>
+                <option value="zh" ${currentSettings.text_lang === 'zh' ? 'selected' : ''}>中文</option>
+                <option value="en" ${currentSettings.text_lang === 'en' ? 'selected' : ''}>英语</option>
+                <option value="ja" ${currentSettings.text_lang === 'ja' ? 'selected' : ''}>日本語</option>
+                <option value="ko" ${currentSettings.text_lang === 'ko' ? 'selected' : ''}>한국어</option>
             </select>
 
-            <label for="ew_text_split_method">切句方式 (Text Split):</label>
+            <label for="ew_text_split_method">切句方式：</label>
             <select id="ew_text_split_method" class="text_pole">
-                <option value="cut0" ${currentSettings.text_split_method === 'cut0' ? 'selected' : ''}>不切 (No split)</option>
-                <option value="cut1" ${currentSettings.text_split_method === 'cut1' ? 'selected' : ''}>凑四句一切 (Every 4 sentences)</option>
-                <option value="cut2" ${currentSettings.text_split_method === 'cut2' ? 'selected' : ''}>凑50字一切 (Every 50 chars)</option>
-                <option value="cut3" ${currentSettings.text_split_method === 'cut3' ? 'selected' : ''}>按中文句号。切 (Chinese period)</option>
-                <option value="cut4" ${currentSettings.text_split_method === 'cut4' ? 'selected' : ''}>按英文句号.切 (English period)</option>
-                <option value="cut5" ${currentSettings.text_split_method === 'cut5' ? 'selected' : ''}>按标点符号切 (All punctuation)</option>
+                <option value="cut0" ${currentSettings.text_split_method === 'cut0' ? 'selected' : ''}>不切</option>
+                <option value="cut1" ${currentSettings.text_split_method === 'cut1' ? 'selected' : ''}>凑四句一切</option>
+                <option value="cut2" ${currentSettings.text_split_method === 'cut2' ? 'selected' : ''}>凑50字一切</option>
+                <option value="cut3" ${currentSettings.text_split_method === 'cut3' ? 'selected' : ''}>按中文句号。切</option>
+                <option value="cut4" ${currentSettings.text_split_method === 'cut4' ? 'selected' : ''}>按英文句号.切</option>
+                <option value="cut5" ${currentSettings.text_split_method === 'cut5' ? 'selected' : ''}>按标点符号切</option>
             </select>
 
             <div class="ew-settings__divider"></div>
 
-            <label>语速 (Speed): <span id="ew_speed_value">${currentSettings.speed}</span></label>
+            <label>语速：<span id="ew_speed_value">${currentSettings.speed}</span></label>
             <input id="ew_speed" type="range" class="ew-range" min="0.25" max="2.0" step="0.05" value="${currentSettings.speed}" />
 
             <label>Top K: <span id="ew_top_k_value">${currentSettings.top_k}</span></label>
@@ -173,28 +174,37 @@ class EntityWhisperProvider {
             <label>Top P: <span id="ew_top_p_value">${currentSettings.top_p}</span></label>
             <input id="ew_top_p" type="range" class="ew-range" min="0.0" max="1.0" step="0.05" value="${currentSettings.top_p}" />
 
-            <label>Temperature: <span id="ew_temperature_value">${currentSettings.temperature}</span></label>
+            <label>采样温度：<span id="ew_temperature_value">${currentSettings.temperature}</span></label>
             <input id="ew_temperature" type="range" class="ew-range" min="0.01" max="2.0" step="0.05" value="${currentSettings.temperature}" />
 
-            <label>Repetition Penalty: <span id="ew_repetition_penalty_value">${currentSettings.repetition_penalty}</span></label>
+            <label>重复惩罚：<span id="ew_repetition_penalty_value">${currentSettings.repetition_penalty}</span></label>
             <input id="ew_repetition_penalty" type="range" class="ew-range" min="1.0" max="2.0" step="0.05" value="${currentSettings.repetition_penalty}" />
 
             <div class="ew-settings__divider"></div>
 
-            <label for="ew_fallback_emotion">Fallback Emotion:</label>
+            <label for="ew_inline_playback_mode">逐句播放模式：</label>
+            <select id="ew_inline_playback_mode" class="text_pole">
+                <option value="single" ${currentSettings.inline_playback_mode === 'single' ? 'selected' : ''}>逐条播放</option>
+                <option value="all" ${currentSettings.inline_playback_mode === 'all' ? 'selected' : ''}>连续播放本轮全部</option>
+            </select>
+            <small class="ew-settings__hint">「连续播放」会在点击任意播放按钮后自动按顺序播放同一条消息中的所有语音。</small>
+
+            <div class="ew-settings__divider"></div>
+
+            <label for="ew_fallback_emotion">备用情感：</label>
             <div class="ew-settings__row">
                 <select id="ew_fallback_emotion" class="text_pole">
                     <option value="default">default</option>
                 </select>
-                <div id="ew_refresh_emotions" class="menu_button menu_button_icon" title="Refresh emotions from backend">
+                <div id="ew_refresh_emotions" class="menu_button menu_button_icon" title="从后端刷新情感列表">
                     <i class="ph-bold ph-arrows-clockwise"></i>
                 </div>
             </div>
-            <small class="ew-settings__hint">Used when no &lt;say tone&gt; tag is present in the AI output.</small>
+            <small class="ew-settings__hint">当 AI 输出中没有 &lt;say tone&gt; 标签时，使用此情感作为默认值。</small>
 
-            <label>Available Emotions:</label>
+            <label>可用情感列表：</label>
             <div id="ew_emotions_display" class="ew-emotions-grid">
-                <span class="ew-emotion-chip ew-emotion-chip--empty">Click refresh to load</span>
+                <span class="ew-emotion-chip ew-emotion-chip--empty">点击刷新加载</span>
             </div>
         </div>
         `;
@@ -207,6 +217,7 @@ class EntityWhisperProvider {
         this.settings.text_lang = $('#ew_text_lang').val();
         this.settings.text_split_method = $('#ew_text_split_method').val();
         this.settings.fallback_emotion = $('#ew_fallback_emotion').val();
+        this.settings.inline_playback_mode = $('#ew_inline_playback_mode').val();
         this.settings.speed = parseFloat($('#ew_speed').val());
         this.settings.top_k = parseInt($('#ew_top_k').val(), 10);
         this.settings.top_p = parseFloat($('#ew_top_p').val());
@@ -261,6 +272,10 @@ class EntityWhisperProvider {
         $('#ew_top_p_value').text(Number(this.settings.top_p).toFixed(2));
         $('#ew_temperature_value').text(Number(this.settings.temperature).toFixed(2));
         $('#ew_repetition_penalty_value').text(Number(this.settings.repetition_penalty).toFixed(2));
+
+        $('#ew_inline_playback_mode')
+            .val(this.settings.inline_playback_mode)
+            .on('change', () => this.onSettingsChange());
 
         $('#ew_fallback_emotion')
             .val(this.settings.fallback_emotion)
@@ -409,7 +424,7 @@ class EntityWhisperProvider {
         // Update emotion pills display
         $display.empty();
         if (emotions.length === 0) {
-            $display.append('<span class="ew-emotion-chip ew-emotion-chip--empty">No emotions found</span>');
+            $display.append('<span class="ew-emotion-chip ew-emotion-chip--empty">未找到情感</span>');
         } else {
             for (const emo of emotions) {
                 const isDefault = emo === 'default' ? ' ew-emotion-chip--default' : '';
@@ -456,7 +471,7 @@ class EntityWhisperProvider {
         );
 
         if (!response.ok) {
-            toastr.error(response.statusText, 'TTS Generation Failed');
+            toastr.error(response.statusText, '语音生成失败');
             throw new Error(`HTTP ${response.status}: ${await response.text()}`);
         }
 

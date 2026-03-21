@@ -65,25 +65,14 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
     border: none;
     border-radius: 6px;
     background: transparent;
     color: var(--SmartThemeBodyColor, #ccc);
-    font-size: 13px;
+    font-size: 17px;
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
-}
-
-.ew-audio-line__btn:hover {
-    background: var(--SmartThemeQuoteColor, #888);
-    color: #fff;
-    transform: scale(1.05);
-}
-
-.ew-audio-line__btn:active {
-    transform: scale(0.95);
 }
 
 /* Play button states */
@@ -98,7 +87,6 @@
 
 .ew-audio-line__btn.ew--playing {
     color: var(--SmartThemeQuoteColor, #888);
-    background: color-mix(in srgb, var(--SmartThemeQuoteColor, #888) 12%, transparent);
 }
 
 .ew-audio-line__btn.ew--error {
@@ -109,11 +97,7 @@
 /* Regen button */
 .ew-audio-line__btn--regen {
     opacity: 0.5;
-    font-size: 11px;
-}
-
-.ew-audio-line__btn--regen:hover {
-    opacity: 1;
+    font-size: 15px;
 }
 
 /* --- Mobile responsive --- */
@@ -123,8 +107,8 @@
     }
 
     .ew-audio-line__btn {
-        width: 22px;
-        height: 22px;
-        font-size: 12px;
+        width: 28px;
+        height: 28px;
+        font-size: 15px;
     }
 }
