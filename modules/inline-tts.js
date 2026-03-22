@@ -468,6 +468,20 @@ async function processMessageElement(mesElement, chatMsg) {
     // Find all text paragraphs for smart placement
     const paragraphs = Array.from(mesTextEl.querySelectorAll('p, div, blockquote, span'));
 
+    /**
+     * Normalize text for fuzzy matching between raw source and rendered DOM.
+     * Markdown renderers may convert:
+     *   ... → …   " " → " "   -- → —   ' → '   etc.
+     */
+    const normalizeForMatch = (s) => s
+        .replace(/\u2026/g, '...')           // … → ...
+        .replace(/[\u201C\u201D]/g, '"')     // " " → "
+        .replace(/[\u2018\u2019]/g, "'")     // ' ' → '
+        .replace(/\u2014/g, '--')            // — → --
+        .replace(/\u2013/g, '-')             // – → -
+        .replace(/\s+/g, ' ')               // collapse whitespace
+        .trim();
+
     for (const gen of generations) {
         const stateClass = gen.isCached ? 'ew--ready' : 'ew--loading';
         const playIcon = gen.isCached
@@ -476,15 +490,20 @@ async function processMessageElement(mesElement, chatMsg) {
 
         // Find the paragraph containing this dialogue text
         let targetP = null;
-        const searchSnippet = gen.text.substring(0, Math.min(20, gen.text.length));
+        const normalizedText = normalizeForMatch(gen.text);
+        const searchSnippet = normalizedText.substring(0, Math.min(20, normalizedText.length));
         for (let i = paragraphs.length - 1; i >= 0; i--) {
-            if (paragraphs[i].textContent.includes(searchSnippet) || paragraphs[i].textContent.includes(gen.text)) {
+            const pText = normalizeForMatch(paragraphs[i].textContent);
+            if (pText.includes(searchSnippet) || pText.includes(normalizedText)) {
                 targetP = paragraphs[i];
                 break;
             }
         }
 
-        if (!targetP) continue;
+        if (!targetP) {
+            console.warn(`${LOG} Could not find DOM paragraph for: "${gen.text.substring(0, 40)}..."`);
+            continue;
+        }
 
         // Apply ew-audio-line styling directly to the paragraph
         targetP.classList.add('ew-audio-line');
