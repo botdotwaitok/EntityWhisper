@@ -18,7 +18,7 @@ import { getStringHash } from '../../../../utils.js';
 // ═══════════════════════════════════════════════════════════════
 
 const LOG = '[EW-Inline]';
-const SAY_TAG_REGEX = /<say\s+tone="([^"]*?)"\s*>([\s\S]*?)<\/say>/gi;
+const SAY_TAG_REGEX = /<say(?:\s+tone="([^"]*?)")?\s*>([\s\S]*?)<\/say>/gi;
 
 const IDB_NAME = 'ew_inline_tts_cache';
 const IDB_STORE = 'audio';
@@ -411,13 +411,15 @@ async function resolveVoiceId() {
 
 /**
  * Process a rendered message element: parse <say> tags, inject audio panels.
+ * @param {boolean} isHistoryLoad If true, do not auto-generate uncached lines —
+ *   render an idle button instead and let the user opt in by clicking play.
  */
-async function processMessageElement(mesElement, chatMsg) {
+async function processMessageElement(mesElement, chatMsg, isHistoryLoad = false) {
     const mesTextEl = mesElement.querySelector('.mes_text');
     if (!mesTextEl) return;
 
     const rawText = chatMsg ? chatMsg.mes : mesElement.getAttribute('mes');
-    if (!rawText || !rawText.includes('<say ')) return;
+    if (!rawText || !/<say[\s>]/i.test(rawText)) return;
 
     const s = _getProviderSettings?.();
     if (!s) return;
@@ -429,7 +431,7 @@ async function processMessageElement(mesElement, chatMsg) {
     let match;
 
     while ((match = SAY_TAG_REGEX.exec(rawText)) !== null) {
-        const toneRaw = match[1];
+        const toneRaw = match[1] ?? '';
         const dialogue = match[2].trim();
         if (!dialogue) continue;
 
@@ -483,10 +485,26 @@ async function processMessageElement(mesElement, chatMsg) {
         .trim();
 
     for (const gen of generations) {
-        const stateClass = gen.isCached ? 'ew--ready' : 'ew--loading';
-        const playIcon = gen.isCached
-            ? '<i class="ph-bold ph-play"></i>'
-            : '<i class="ph-bold ph-spinner ew-spin"></i>';
+        // Three initial states:
+        //   ew--ready  : audio in cache, click = play
+        //   ew--idle   : not cached + history load, click = generate then play
+        //   ew--loading: not cached + fresh render, auto-generating now
+        let stateClass;
+        let playIcon;
+        let btnTitle;
+        if (gen.isCached) {
+            stateClass = 'ew--ready';
+            playIcon = '<i class="ph-bold ph-play"></i>';
+            btnTitle = '播放';
+        } else if (isHistoryLoad) {
+            stateClass = 'ew--idle';
+            playIcon = '<i class="ph-bold ph-play"></i>';
+            btnTitle = '点击生成并播放';
+        } else {
+            stateClass = 'ew--loading';
+            playIcon = '<i class="ph-bold ph-spinner ew-spin"></i>';
+            btnTitle = '生成中...';
+        }
 
         // Find the paragraph containing this dialogue text
         let targetP = null;
@@ -520,7 +538,7 @@ async function processMessageElement(mesElement, chatMsg) {
         controls.innerHTML = `
             <span class="ew-audio-line__duration">0:00</span>
             <button id="${gen.playBtnId}" class="ew-audio-line__btn ${stateClass}"
-                    title="${gen.isCached ? '播放' : '生成中...'}"
+                    title="${btnTitle}"
                     ${gen.isCached ? `data-cache-key="${gen.key}"` : ''}>
                 ${playIcon}
             </button>
@@ -533,10 +551,11 @@ async function processMessageElement(mesElement, chatMsg) {
         // Bind events
         bindLineEvents(gen, chatMsg);
 
-        // Trigger generation if not cached
-        if (!gen.isCached) {
+        // Trigger generation only for fresh renders. History loads stay idle
+        // until the user clicks play, so we don't re-run TTS on every refresh.
+        if (!gen.isCached && !isHistoryLoad) {
             triggerGeneration(gen, chatMsg);
-        } else {
+        } else if (gen.isCached) {
             // Load duration from cached audio
             const data = audioCache.get(gen.key);
             if (data?.url) {
@@ -559,12 +578,25 @@ function bindLineEvents(gen, chatMsg) {
     const regenBtn = document.getElementById(gen.regenBtnId);
 
     if (playBtn) {
-        playBtn.addEventListener('click', () => {
+        playBtn.addEventListener('click', async () => {
             if (playBtn.classList.contains('ew--loading')) return;
             if (playBtn.classList.contains('ew--error')) return;
 
             if (playBtn.classList.contains('ew--playing')) {
                 stopCurrentPlayback();
+                return;
+            }
+
+            // Idle (history-loaded, never generated): generate now, then play.
+            if (playBtn.classList.contains('ew--idle')) {
+                playBtn.classList.remove('ew--idle');
+                playBtn.classList.add('ew--loading');
+                playBtn.innerHTML = '<i class="ph-bold ph-spinner ew-spin"></i>';
+                playBtn.title = '生成中...';
+                await triggerGeneration(gen, chatMsg);
+                if (audioCache.has(gen.key)) {
+                    playAudioBlob(audioCache.get(gen.key).url, gen.playBtnId);
+                }
                 return;
             }
 
@@ -711,7 +743,8 @@ export function initInlineTts(getProviderSettings) {
     eventSource.on(event_types.USER_MESSAGE_RENDERED, onMessageRendered);
     eventSource.on(event_types.MESSAGE_UPDATED, onMessageRendered);
 
-    // Process existing messages when chat changes
+    // Process existing messages when chat changes (page refresh, chat switch).
+    // These are historical lines — render idle buttons, do NOT auto-regenerate.
     eventSource.on(event_types.CHAT_CHANGED, () => {
         setTimeout(() => {
             const context = getContext();
@@ -721,7 +754,7 @@ export function initInlineTts(getProviderSettings) {
                 if (context?.chat) {
                     chatMsg = context.chat[mesId] || context.chat[parseInt(mesId, 10)];
                 }
-                processMessageElement(mes, chatMsg);
+                processMessageElement(mes, chatMsg, true);
             });
         }, 500);
     });

@@ -85,6 +85,17 @@
     color: var(--SmartThemeQuoteColor, #888);
 }
 
+/* History-loaded, not yet generated — click to generate + play */
+.ew-audio-line__btn.ew--idle {
+    color: var(--SmartThemeBodyColor, #ccc);
+    opacity: 0.55;
+}
+
+.ew-audio-line__btn.ew--idle:hover {
+    opacity: 1;
+    color: var(--SmartThemeQuoteColor, #888);
+}
+
 .ew-audio-line__btn.ew--playing {
     color: var(--SmartThemeQuoteColor, #888);
 }
